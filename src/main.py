@@ -24,6 +24,16 @@ def load_file(file_path):
     except Exception as e:
         print(f"Error loading file: {e}")
         return None
+
+def save_file(file_path, ans):
+    try:
+        with open(file_path, "w") as f:
+            for row in ans:
+                f.write(''.join(row) + '\n')
+        print(f"Saved file: {file_path}")
+    except Exception as e:
+        print(f"Error saving file: {e}")
+
 class Algo:
     def __init__(self, arr, gui=None):
         self.arr = [[ord(item) - ord('A') for item in rows] for rows in arr]
@@ -91,6 +101,7 @@ def run_solver(solver):
         print(f"Solution found: {result}")
         print("Time Elapsed:", f"{((end_time-start_time)*1000):.4f}", "ms")
         print("Coordinates:", solver.coordinate)
+        save_file("test/output.txt", solver.ans)
 
 def on_import_callback(file_path):
     global arr, solver, on_exit
