@@ -37,10 +37,17 @@ def save_file(file_path, ans):
 class Algo:
     def __init__(self, arr, gui=None):
         self.arr = [[ord(item) - ord('A') for item in rows] for rows in arr]
-        self.ans = arr
+        self.ans = copy.deepcopy(arr)
         self.coordinate = list()
-        self.num_regions = max(max(row) for row in self.arr)
-        self.region = list(False for i in range(self.num_regions + 1))
+        
+        unique_regions = set()
+        for row in self.arr:
+            for cell in row:
+                unique_regions.add(cell)
+        
+        self.regions_list = sorted(list(unique_regions))
+        self.num_regions = len(self.regions_list)
+        
         self.rows = len(arr)
         self.cols = len(arr[0])
         self.gui = gui
@@ -54,7 +61,7 @@ class Algo:
     def checkOutputValid(self):
         coordinates = self.coordinate
         if coordinates == []: return False
-        if len(coordinates) != self.num_regions + 1: return False
+        if len(coordinates) != self.num_regions: return False
         for i in range(len(coordinates)):
             for j in range(i + 1, len(coordinates)):
                 if(coordinates[i][0] == coordinates[j][0]): return False
@@ -63,7 +70,7 @@ class Algo:
         
         if not self.optimizer:
             for i in range(len(coordinates)):
-                if self.arr[coordinates[i][0]][coordinates[i][1]] != i: return False
+                if self.arr[coordinates[i][0]][coordinates[i][1]] != self.regions_list[i]: return False
 
         return True
 
@@ -71,26 +78,27 @@ class Algo:
         if on_exit.is_set():
             return False
         
-        if(region_idx > self.num_regions):
+        if(region_idx >= self.num_regions):
             if self.gui:
                 self.gui.queens = self.coordinate
             return self.checkOutputValid()
         
+        curr_region = self.regions_list[region_idx]
+        
         ans = self.ans
-        region = self.region
         coordinates = self.coordinate
         for i in range(self.rows):
             for j in range(self.cols):
-                if(not self.optimizer or self.arr[i][j] == region_idx):
+                if(not self.optimizer or self.arr[i][j] == curr_region):
+                    original_value = ans[i][j]
                     ans[i][j] = "X"
-                    region[self.arr[i][j]] = True
                     coordinates.append([i, j])
 
-                    if self.solve(region_idx+1): return True
+                    if self.solve(region_idx+1): 
+                        return True
 
                     coordinates.pop()
-                    region[region_idx] = False
-                    ans[i][j] = chr(self.arr[i][j] + ord('A'))
+                    ans[i][j] = original_value
         return False
 
 def run_solver(solver):
@@ -109,10 +117,11 @@ def on_import_callback(file_path):
     if arr:
         solver = Algo(arr, gui=gui)
         on_exit.set()
+        gui.queens = []
         gui.rows = len(arr)
         gui.cols = len(arr[0])
         gui.arr = solver.arr
-        gui.regions = [i for i in range(solver.num_regions)]
+        gui.regions = solver.regions_list
         gui.generate_colors()
 
 
@@ -127,8 +136,7 @@ def on_solve_callback(optimized=False):
         print("Solver already running")
         return
     
-    if optimized:
-        solver.optimizer = True
+    solver.optimizer = optimized
 
     on_exit.clear()
     solver_thread = threading.Thread(target=run_solver, args=(solver,), daemon=True)

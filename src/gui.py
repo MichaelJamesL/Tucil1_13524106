@@ -109,7 +109,6 @@ class GUI:
             self.on_import(file_path)
     
     def handle_solve(self, optimized=False):
-        """Trigger solve callback"""
         if self.on_solve:
             self.on_solve(optimized=optimized)
 
