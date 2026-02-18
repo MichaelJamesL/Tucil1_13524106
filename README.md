@@ -14,7 +14,7 @@ Or use the compiled executable in the `bin` folder.
 
 To compile the application:
 ```
-python -m PyInstaller --onefile --windowed --distpath bin src/main.py
+python -m PyInstaller --onefile --distpath bin --hidden-import pygame src/main.py
 ```
 
 ## Project Structure
